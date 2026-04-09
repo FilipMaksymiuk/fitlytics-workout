@@ -10,10 +10,10 @@ Web app for tracking gym progress. Log workouts, track weights and reps, visuali
 
 - JWT authentication (register, login)
 - Exercise library with primary/secondary muscle group tagging
-- Workout session management — start, log sets, end session
+- Workout session management - start, log sets, end session
 - Per-set tracking: weight, reps, duration, distance
-- Progress history per exercise — max weight, total volume, best reps
-- Personal records — lifetime best weight per exercise
+- Progress history per exercise - max weight, total volume, best reps
+- Personal records - lifetime best weight per exercise
 - Weekly training volume with muscle group breakdown
 - Monthly training calendar
 
@@ -36,3 +36,5 @@ uvicorn main:app --reload
 ```
 
 API at `http://localhost:8000` · Docs at `http://localhost:8000/docs`
+
+This app is currently under development.
