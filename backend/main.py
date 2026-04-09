@@ -5,6 +5,7 @@ import models.models  # noqa: F401
 from routes.auth import router as auth_router
 from routes.exercises import router as exercises_router
 from routes.sessions import router as sessions_router
+from routes.sets import router as sets_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -22,6 +23,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(exercises_router)
 app.include_router(sessions_router)
+app.include_router(sets_router)
 
 
 @app.get("/")
