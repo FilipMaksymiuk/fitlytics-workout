@@ -18,6 +18,9 @@ class User(Base):
     workout_sessions: Mapped[list["WorkoutSession"]] = relationship(
         back_populates="user"
     )
+    workout_plans: Mapped[list["WorkoutPlan"]] = relationship(
+        back_populates="user"
+    )
 
 
 class MuscleGroup(Base):
@@ -77,6 +80,23 @@ class WorkoutSession(Base):
     workout_sets: Mapped[list["WorkoutSet"]] = relationship(
         back_populates="workout_session"
     )
+
+
+class WorkoutPlan(Base):
+    __tablename__ = "workout_plans"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    planned_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    deadline: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    is_completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    user: Mapped["User"] = relationship(back_populates="workout_plans")
 
 
 class WorkoutSet(Base):
