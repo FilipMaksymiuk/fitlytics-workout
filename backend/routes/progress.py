@@ -127,8 +127,8 @@ def get_monthly_training_days(
         db.query(WorkoutSession.date)
         .filter(
             WorkoutSession.user_id == current_user.id,
-            func.strftime("%Y", WorkoutSession.date) == str(year),
-            func.strftime("%m", WorkoutSession.date) == f"{month:02d}",
+            func.year(WorkoutSession.date) == year,
+            func.month(WorkoutSession.date) == month,
         )
         .order_by(WorkoutSession.date.asc())
         .all()

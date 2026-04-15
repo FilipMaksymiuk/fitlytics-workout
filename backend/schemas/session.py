@@ -38,6 +38,6 @@ class SessionDetailOut(BaseModel):
     date: datetime
     duration_minutes: int | None
     notes: str | None
-    sets: list[WorkoutSetOut]
+    workout_sets: list[WorkoutSetOut]
 
     model_config = ConfigDict(from_attributes=True)
