@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -6,7 +7,7 @@ import HistoryPage from './pages/HistoryPage'
 import ProgressPage from './pages/ProgressPage'
 import PlansPage from './pages/PlansPage'
 
-function PrivateRoute({ children }: { children: React.ReactNode }) {
+function PrivateRoute({ children }: { children: ReactNode }) {
   const token = localStorage.getItem('token')
   return token ? <>{children}</> : <Navigate to="/login" replace />
 }
