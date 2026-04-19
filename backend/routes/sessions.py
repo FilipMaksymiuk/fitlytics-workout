@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
-from models.models import WorkoutSession, WorkoutSet, User
+from models.models import WorkoutSession, WorkoutSet, User, Exercise
 from schemas.session import SessionCreate, SessionEnd, SessionOut, SessionDetailOut
 from core.deps import get_current_user
 
@@ -66,7 +66,7 @@ def get_session(
 ):
     session = (
         db.query(WorkoutSession)
-        .options(joinedload(WorkoutSession.workout_sets))
+        .options(joinedload(WorkoutSession.workout_sets).joinedload(WorkoutSet.exercise))
         .filter(WorkoutSession.id == session_id)
         .first()
     )

@@ -145,7 +145,7 @@ export default function PlansPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !plannedAt || !deadline) return
-    createPlan({ name, description, planned_at: plannedAt, deadline }).then(() => {
+    createPlan({ name, description, planned_date: plannedAt, deadline }).then(() => {
       setName('')
       setDescription('')
       setPlannedAt('')

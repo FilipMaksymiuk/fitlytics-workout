@@ -1,9 +1,10 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from typing import Any
+from pydantic import BaseModel, ConfigDict, model_validator
 
 
 class SessionCreate(BaseModel):
-    notes: str | None
+    notes: str | None = None
 
 
 class SessionEnd(BaseModel):
@@ -13,6 +14,7 @@ class SessionEnd(BaseModel):
 class WorkoutSetOut(BaseModel):
     id: int
     exercise_id: int
+    exercise_name: str = ""
     weight_kg: float | None
     reps: int | None
     set_number: int
@@ -21,6 +23,13 @@ class WorkoutSetOut(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @model_validator(mode='before')
+    @classmethod
+    def extract_exercise_name(cls, data: Any) -> Any:
+        if hasattr(data, 'exercise') and data.exercise is not None:
+            data.__dict__['exercise_name'] = data.exercise.name
+        return data
 
 
 class SessionOut(BaseModel):

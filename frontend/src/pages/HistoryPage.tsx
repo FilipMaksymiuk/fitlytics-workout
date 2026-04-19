@@ -13,14 +13,16 @@ interface SetItem {
 
 interface Session {
   id: number
-  created_at: string
-  duration?: number
-  sets_count?: number
-  exercises?: string[]
+  date: string
+  duration_minutes?: number
+  notes?: string
 }
 
-interface SessionDetail extends Session {
-  sets: SetItem[]
+interface SessionDetail {
+  id: number
+  date: string
+  duration_minutes?: number
+  workout_sets: SetItem[]
 }
 
 export default function HistoryPage() {
@@ -84,24 +86,22 @@ export default function HistoryPage() {
         const detail = expanded[session.id]
         const isExpanded = detail !== undefined
         const groupedSets = detail
-          ? detail.sets.reduce<Record<string, SetItem[]>>((acc, s) => {
-              if (!acc[s.exercise_name]) acc[s.exercise_name] = []
-              acc[s.exercise_name].push(s)
+          ? detail.workout_sets.reduce<Record<string, SetItem[]>>((acc, s) => {
+              const key = s.exercise_name || `#${s.exercise_id}`
+              if (!acc[key]) acc[key] = []
+              acc[key].push(s)
               return acc
             }, {})
           : {}
 
         return (
           <div key={session.id} style={styles.card}>
-            <p style={styles.date}>{formatDate(session.created_at)}</p>
-            {session.duration !== undefined && (
-              <p style={styles.meta}>Czas trwania: {formatDuration(session.duration)}</p>
+            <p style={styles.date}>{formatDate(session.date)}</p>
+            {session.duration_minutes != null && (
+              <p style={styles.meta}>Czas trwania: {session.duration_minutes} min</p>
             )}
-            {session.sets_count !== undefined && (
-              <p style={styles.meta}>Sety: {session.sets_count}</p>
-            )}
-            {session.exercises && session.exercises.length > 0 && (
-              <p style={styles.meta}>Ćwiczenia: {session.exercises.join(', ')}</p>
+            {session.notes && (
+              <p style={styles.meta}>Notatki: {session.notes}</p>
             )}
             <button style={styles.detailBtn} onClick={() => handleToggle(session.id)}>
               {loadingDetail[session.id] ? 'Ładowanie...' : isExpanded ? 'Zwiń' : 'Szczegóły'}

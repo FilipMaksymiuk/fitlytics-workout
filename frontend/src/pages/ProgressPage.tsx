@@ -205,6 +205,7 @@ function ProgressSection() {
           value={days}
           onChange={e => setDays(Number(e.target.value))}
         >
+          <option value={7}>7 dni</option>
           <option value={30}>30 dni</option>
           <option value={60}>60 dni</option>
           <option value={90}>90 dni</option>
@@ -220,7 +221,7 @@ function ProgressSection() {
               contentStyle={{ background: '#2a2a2a', border: '1px solid #444', color: '#f0f0f0' }}
               formatter={(val: number) => [`${val} kg`, 'Ciężar']}
             />
-            <Line type="monotone" dataKey="max_weight" stroke="#e63946" dot={false} strokeWidth={2} />
+            <Line type="monotone" dataKey="max_weight" stroke="#e63946" dot={{ r: 5, fill: '#e63946' }} activeDot={{ r: 7 }} strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       )}

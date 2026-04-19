@@ -3,16 +3,20 @@ import { createSession, endSession } from '../api/sessions'
 import { getExercises } from '../api/exercises'
 import { createSet, getSetsBySession, deleteSet } from '../api/sets'
 
+interface MuscleGroup {
+  id: number
+  name: string
+}
+
 interface Exercise {
   id: number
   name: string
-  muscle_group: string
+  primary_muscles: MuscleGroup[]
 }
 
 interface WorkoutSet {
   id: number
   exercise_id: number
-  exercise_name: string
   set_number: number
   weight_kg: number
   reps: number
@@ -31,11 +35,16 @@ export default function WorkoutPage() {
   const [sets, setSets] = useState<WorkoutSet[]>([])
   const [muscleFilter, setMuscleFilter] = useState('')
   const [selectedExercise, setSelectedExercise] = useState<number | ''>('')
-  const [weight, setWeight] = useState<number>(0)
+  const [weight, setWeight] = useState<string>('')
   const [reps, setReps] = useState<number>(1)
-  const [setNumber, setSetNumber] = useState<number>(1)
   const [setError, setSetError] = useState('')
   const [summary, setSummary] = useState<Summary | null>(null)
+
+  const getExerciseName = (id: number) =>
+    exercises.find(e => e.id === id)?.name ?? `#${id}`
+
+  const nextSetNumber = (exerciseId: number) =>
+    sets.filter(s => s.exercise_id === exerciseId).length + 1
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -78,15 +87,14 @@ export default function WorkoutPage() {
     if (!selectedExercise) return
     try {
       await createSet({
-        session_id: sessionId,
+        workout_session_id: sessionId,
         exercise_id: selectedExercise,
-        set_number: setNumber,
-        weight_kg: weight,
+        set_number: nextSetNumber(selectedExercise as number),
+        weight_kg: parseFloat(weight) || 0,
         reps,
       })
       const res = await getSetsBySession(sessionId!)
       setSets(res.data)
-      setSetNumber(n => n + 1)
     } catch {
       setSetError('Nie udało się dodać setu')
     }
@@ -99,17 +107,16 @@ export default function WorkoutPage() {
 
   const handleEnd = async () => {
     if (timerRef.current) clearInterval(timerRef.current)
-    await endSession(sessionId!, { duration: seconds })
+    await endSession(sessionId!, { duration_minutes: Math.round(seconds / 60) })
     setSummary({ duration: formatTime(seconds), sets })
     setSessionId(null)
   }
 
-  const muscleGroups = [...new Set(exercises.map(e => e.muscle_group))].filter(Boolean)
+  const muscleGroups = [...new Set(exercises.flatMap(e => e.primary_muscles.map(m => m.name)))].filter(Boolean)
 
-  const groupedSets = sets.reduce<Record<string, WorkoutSet[]>>((acc, s) => {
-    const key = s.exercise_name
-    if (!acc[key]) acc[key] = []
-    acc[key].push(s)
+  const groupedSets = sets.reduce<Record<number, WorkoutSet[]>>((acc, s) => {
+    if (!acc[s.exercise_id]) acc[s.exercise_id] = []
+    acc[s.exercise_id].push(s)
     return acc
   }, {})
 
@@ -122,8 +129,8 @@ export default function WorkoutPage() {
           <p style={styles.text}>Liczba setów: <strong>{summary.sets.length}</strong></p>
           <p style={styles.text}>Ćwiczenia:</p>
           <ul style={{ color: '#ccc', paddingLeft: '1.25rem' }}>
-            {[...new Set(summary.sets.map(s => s.exercise_name))].map(name => (
-              <li key={name}>{name}</li>
+            {[...new Set(summary.sets.map(s => s.exercise_id))].map(id => (
+              <li key={id}>{getExerciseName(id)}</li>
             ))}
           </ul>
         </div>
@@ -162,15 +169,11 @@ export default function WorkoutPage() {
             </select>
             <div style={styles.row}>
               <label style={styles.label}>Ciężar (kg)</label>
-              <input style={styles.input} type="number" step={0.5} min={0} value={weight} onChange={e => setWeight(Number(e.target.value))} />
+              <input style={styles.input} type="number" step={0.5} min={0} value={weight} placeholder="0" onChange={e => setWeight(e.target.value)} />
             </div>
             <div style={styles.row}>
               <label style={styles.label}>Powtórzenia</label>
               <input style={styles.input} type="number" min={1} value={reps} onChange={e => setReps(Number(e.target.value))} />
-            </div>
-            <div style={styles.row}>
-              <label style={styles.label}>Numer setu</label>
-              <input style={styles.input} type="number" min={1} value={setNumber} onChange={e => setSetNumber(Number(e.target.value))} />
             </div>
             {setError && <p style={{ color: '#e63946', margin: 0 }}>{setError}</p>}
             <button style={styles.buttonRed} onClick={handleAddSet}>Dodaj set</button>
@@ -181,10 +184,10 @@ export default function WorkoutPage() {
       <div style={styles.card}>
         <h3 style={styles.sectionTitle}>Sety bieżącego treningu</h3>
         {Object.keys(groupedSets).length === 0 && <p style={styles.text}>Brak setów</p>}
-        {Object.entries(groupedSets).map(([name, group]) => (
-          <div key={name} style={{ marginBottom: '1rem' }}>
-            <p style={{ color: '#e63946', marginBottom: '0.5rem', fontWeight: 600 }}>{name}</p>
-            {group.map(s => (
+        {Object.entries(groupedSets).map(([exId, group]) => (
+          <div key={exId} style={{ marginBottom: '1rem' }}>
+            <p style={{ color: '#e63946', marginBottom: '0.5rem', fontWeight: 600 }}>{getExerciseName(Number(exId))}</p>
+            {[...group].sort((a, b) => a.set_number - b.set_number).map(s => (
               <div key={s.id} style={styles.setRow}>
                 <span style={styles.text}>Set {s.set_number} — {s.weight_kg} kg × {s.reps} powt.</span>
                 <button style={styles.deleteBtn} onClick={() => handleDeleteSet(s.id)}>✕</button>

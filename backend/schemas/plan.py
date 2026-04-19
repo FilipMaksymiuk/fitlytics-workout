@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, model_validator
 
 class PlanCreate(BaseModel):
     name: str
-    description: str | None
+    description: str | None = None
     planned_date: datetime
     deadline: datetime
 
