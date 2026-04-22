@@ -7,6 +7,7 @@ import HistoryPage from './pages/HistoryPage'
 import ProgressPage from './pages/ProgressPage'
 import PlansPage from './pages/PlansPage'
 import Navbar from './components/Navbar'
+import { AccentProvider } from './AccentContext'
 
 function PrivateRoute({ children }: { children: ReactNode }) {
   const token = localStorage.getItem('token')
@@ -28,6 +29,7 @@ function Layout({ children }: { children: ReactNode }) {
 
 function App() {
   return (
+    <AccentProvider>
     <BrowserRouter>
       <Layout>
         <Routes>
@@ -40,6 +42,7 @@ function App() {
         </Routes>
       </Layout>
     </BrowserRouter>
+    </AccentProvider>
   )
 }
 

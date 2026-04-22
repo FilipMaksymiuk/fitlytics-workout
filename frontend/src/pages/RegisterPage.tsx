@@ -122,12 +122,12 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
   },
   error: {
-    color: '#e63946',
+    color: 'var(--accent)',
     margin: 0,
     fontSize: '0.9rem',
   },
   button: {
-    backgroundColor: '#e63946',
+    backgroundColor: 'var(--accent)',
     color: '#fff',
     border: 'none',
     borderRadius: '6px',
@@ -143,7 +143,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.9rem',
   },
   anchor: {
-    color: '#e63946',
+    color: 'var(--accent)',
     textDecoration: 'none',
   },
 }

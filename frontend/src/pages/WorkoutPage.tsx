@@ -124,7 +124,7 @@ export default function WorkoutPage() {
     return (
       <div style={styles.page}>
         <div style={styles.card}>
-          <h2 style={{ color: '#e63946', textAlign: 'center' }}>Trening zakończony</h2>
+          <h2 style={{ color: 'var(--accent)', textAlign: 'center' }}>Trening zakończony</h2>
           <p style={styles.text}>Czas trwania: <strong>{summary.duration}</strong></p>
           <p style={styles.text}>Liczba setów: <strong>{summary.sets.length}</strong></p>
           <p style={styles.text}>Ćwiczenia:</p>
@@ -175,7 +175,7 @@ export default function WorkoutPage() {
               <label style={styles.label}>Powtórzenia</label>
               <input style={styles.input} type="number" min={1} value={reps} onChange={e => setReps(Number(e.target.value))} />
             </div>
-            {setError && <p style={{ color: '#e63946', margin: 0 }}>{setError}</p>}
+            {setError && <p style={{ color: 'var(--accent)', margin: 0 }}>{setError}</p>}
             <button style={styles.buttonRed} onClick={handleAddSet}>Dodaj set</button>
           </div>
         )}
@@ -186,7 +186,7 @@ export default function WorkoutPage() {
         {Object.keys(groupedSets).length === 0 && <p style={styles.text}>Brak setów</p>}
         {Object.entries(groupedSets).map(([exId, group]) => (
           <div key={exId} style={{ marginBottom: '1rem' }}>
-            <p style={{ color: '#e63946', marginBottom: '0.5rem', fontWeight: 600 }}>{getExerciseName(Number(exId))}</p>
+            <p style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontWeight: 600 }}>{getExerciseName(Number(exId))}</p>
             {[...group].sort((a, b) => a.set_number - b.set_number).map(s => (
               <div key={s.id} style={styles.setRow}>
                 <span style={styles.text}>Set {s.set_number} — {s.weight_kg} kg × {s.reps} powt.</span>
@@ -254,7 +254,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '0.85rem',
   },
   buttonRed: {
-    backgroundColor: '#e63946',
+    backgroundColor: 'var(--accent)',
     color: '#fff',
     border: 'none',
     borderRadius: '6px',
@@ -277,7 +277,7 @@ const styles: Record<string, React.CSSProperties> = {
   deleteBtn: {
     background: 'none',
     border: 'none',
-    color: '#e63946',
+    color: 'var(--accent)',
     cursor: 'pointer',
     fontSize: '1rem',
     padding: '0 0.25rem',

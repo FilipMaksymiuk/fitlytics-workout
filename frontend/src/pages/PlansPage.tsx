@@ -28,7 +28,7 @@ const s: Record<string, React.CSSProperties> = {
     fontSize: '18px',
     fontWeight: 700,
     marginBottom: '16px',
-    color: '#e63946',
+    color: 'var(--accent)',
   },
   field: {
     display: 'flex',
@@ -59,7 +59,7 @@ const s: Record<string, React.CSSProperties> = {
     minHeight: '70px',
   },
   btn: {
-    background: '#e63946',
+    background: 'var(--accent)',
     color: '#fff',
     border: 'none',
     borderRadius: '6px',
@@ -231,7 +231,7 @@ export default function PlansPage() {
             <div style={s.planName}>
               {plan.name}
               {plan.is_completed && <span style={s.badge('#2ecc71')}>Ukończony</span>}
-              {isOverdue(plan) && <span style={s.badge('#e63946')}>Spóźniony</span>}
+              {isOverdue(plan) && <span style={s.badge('var(--accent)')}>Spóźniony</span>}
             </div>
             {plan.description && <div style={s.meta}>{plan.description}</div>}
             <div style={s.meta}>Trening: {new Date(plan.planned_at).toLocaleString('pl-PL')}</div>

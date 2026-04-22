@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { useAccent, ACCENT_COLORS } from '../AccentContext'
 
 const styles: Record<string, React.CSSProperties> = {
   nav: {
@@ -11,7 +12,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid #333',
   },
   logo: {
-    color: '#e63946',
+    color: 'var(--accent)',
     fontWeight: 700,
     fontSize: '18px',
     textDecoration: 'none',
@@ -23,23 +24,30 @@ const styles: Record<string, React.CSSProperties> = {
   },
   logout: {
     background: 'transparent',
-    border: '1px solid #e63946',
-    color: '#e63946',
+    border: '1px solid var(--accent)',
+    color: 'var(--accent)',
     borderRadius: '6px',
     padding: '6px 14px',
     fontSize: '13px',
     cursor: 'pointer',
   },
+  picker: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    marginRight: '16px',
+  },
 }
 
 const linkStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
-  color: isActive ? '#e63946' : '#ccc',
+  color: isActive ? 'var(--accent)' : '#ccc',
   textDecoration: isActive ? 'underline' : 'none',
   fontSize: '14px',
 })
 
 export default function Navbar() {
   const navigate = useNavigate()
+  const { accent, setAccent } = useAccent()
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -54,6 +62,27 @@ export default function Navbar() {
         <NavLink to="/history" style={linkStyle}>Historia</NavLink>
         <NavLink to="/progress" style={linkStyle}>Postępy</NavLink>
         <NavLink to="/plans" style={linkStyle}>Plany</NavLink>
+        <div style={styles.picker}>
+          {ACCENT_COLORS.map(c => (
+            <button
+              key={c.value}
+              title={c.name}
+              onClick={() => setAccent(c.value)}
+              style={{
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                background: c.value,
+                border: accent === c.value ? '2px solid #fff' : '2px solid transparent',
+                padding: 0,
+                cursor: 'pointer',
+                flexShrink: 0,
+                boxShadow: accent === c.value ? `0 0 0 1px ${c.value}` : 'none',
+                transition: 'border 0.15s, box-shadow 0.15s',
+              }}
+            />
+          ))}
+        </div>
         <button style={styles.logout} onClick={handleLogout}>Wyloguj</button>
       </div>
     </nav>
