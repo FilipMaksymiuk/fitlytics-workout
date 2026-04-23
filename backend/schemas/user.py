@@ -13,6 +13,13 @@ class UserLogin(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    email: str | None = None
+    username: str | None = None
+    current_password: str | None = None
+    new_password: str | None = None
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

@@ -62,6 +62,7 @@ export default function Navbar() {
         <NavLink to="/history" style={linkStyle}>Historia</NavLink>
         <NavLink to="/progress" style={linkStyle}>Postępy</NavLink>
         <NavLink to="/plans" style={linkStyle}>Plany</NavLink>
+        <NavLink to="/profile" style={linkStyle}>Profil</NavLink>
         <div style={styles.picker}>
           {ACCENT_COLORS.map(c => (
             <button

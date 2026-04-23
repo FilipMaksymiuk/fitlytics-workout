@@ -6,6 +6,7 @@ import WorkoutPage from './pages/WorkoutPage'
 import HistoryPage from './pages/HistoryPage'
 import ProgressPage from './pages/ProgressPage'
 import PlansPage from './pages/PlansPage'
+import ProfilePage from './pages/ProfilePage'
 import Navbar from './components/Navbar'
 import { AccentProvider } from './AccentContext'
 
@@ -39,6 +40,7 @@ function App() {
           <Route path="/history" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
           <Route path="/progress" element={<PrivateRoute><ProgressPage /></PrivateRoute>} />
           <Route path="/plans" element={<PrivateRoute><PlansPage /></PrivateRoute>} />
+          <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         </Routes>
       </Layout>
     </BrowserRouter>
