@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict
 
 class ProgressPoint(BaseModel):
     date: datetime
-    max_weight: float | None
+    avg_weight: float | None
     total_volume: float
     best_set_reps: int | None
 

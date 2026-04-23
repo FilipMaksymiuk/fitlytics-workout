@@ -176,22 +176,25 @@ def get_exercise_progress(
             .all()
         )
 
-        max_weight = None
         total_volume = 0.0
         best_set_reps = None
+        weighted_sum = 0.0
+        total_reps = 0
 
         for s in sets:
-            if s.weight_kg is not None:
-                max_weight = max(max_weight, s.weight_kg) if max_weight is not None else s.weight_kg
             if s.weight_kg is not None and s.reps is not None:
                 total_volume += s.weight_kg * s.reps
+                weighted_sum += s.weight_kg * s.reps
+                total_reps += s.reps
             if s.reps is not None:
                 best_set_reps = max(best_set_reps, s.reps) if best_set_reps is not None else s.reps
+
+        avg_weight = round(weighted_sum / total_reps, 2) if total_reps > 0 else None
 
         result.append(
             ProgressPoint(
                 date=session_date,
-                max_weight=max_weight,
+                avg_weight=avg_weight,
                 total_volume=total_volume,
                 best_set_reps=best_set_reps,
             )

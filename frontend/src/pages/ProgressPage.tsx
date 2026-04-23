@@ -19,7 +19,7 @@ interface Exercise {
 
 interface ProgressPoint {
   date: string
-  max_weight: number
+  avg_weight: number
 }
 
 interface WeeklyVolume {
@@ -243,7 +243,7 @@ function ProgressSection() {
             />
             <Line
               type="monotone"
-              dataKey="max_weight"
+              dataKey="avg_weight"
               stroke="var(--accent)"
               strokeWidth={2}
               dot={{ r: 4, fill: 'var(--accent)', stroke: '#1a1a1a', strokeWidth: 2 }}
