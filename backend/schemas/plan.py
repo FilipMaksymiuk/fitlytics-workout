@@ -1,34 +1,55 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict
+
+
+class PlanSetCreate(BaseModel):
+    set_number: int
+    planned_weight_kg: float | None = None
+    planned_reps: int | None = None
+
+
+class PlanExerciseCreate(BaseModel):
+    exercise_id: int
+    order_index: int
+    sets: list[PlanSetCreate] = []
 
 
 class PlanCreate(BaseModel):
     name: str
     description: str | None = None
-    planned_date: datetime
-    deadline: datetime
-
-    @model_validator(mode="after")
-    def deadline_after_planned(self) -> "PlanCreate":
-        if self.deadline <= self.planned_date:
-            raise ValueError("deadline musi być późniejszy niż planned_date")
-        return self
+    exercises: list[PlanExerciseCreate] = []
 
 
 class PlanUpdate(BaseModel):
-    planned_date: datetime | None = None
-    deadline: datetime | None = None
-    is_completed: bool | None = None
+    name: str | None = None
+    description: str | None = None
+    exercises: list[PlanExerciseCreate] | None = None
+
+
+class PlanSetOut(BaseModel):
+    id: int
+    set_number: int
+    planned_weight_kg: float | None
+    planned_reps: int | None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PlanExerciseOut(BaseModel):
+    id: int
+    exercise_id: int
+    exercise_name: str
+    order_index: int
+    sets: list[PlanSetOut]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlanOut(BaseModel):
     id: int
     name: str
     description: str | None
-    planned_date: datetime
-    deadline: datetime
-    is_completed: bool
     created_at: datetime
-    is_overdue: bool
+    exercises: list[PlanExerciseOut]
 
     model_config = ConfigDict(from_attributes=True)

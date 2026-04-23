@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text, inspect as sa_inspect
 from database import Base, engine
 import models.models  # noqa: F401
 from routes.auth import router as auth_router
@@ -10,13 +11,26 @@ from routes.progress import router as progress_router
 from routes.plans import router as plans_router
 from routes.users import router as users_router
 
+
+def _migrate():
+    try:
+        cols = {c["name"] for c in sa_inspect(engine).get_columns("workout_plans")}
+        with engine.begin() as conn:
+            for col in ("planned_date", "deadline", "is_completed"):
+                if col in cols:
+                    conn.execute(text(f"ALTER TABLE workout_plans DROP COLUMN {col}"))
+    except Exception:
+        pass
+
+
+_migrate()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Fitlytics Workout API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -12,11 +12,9 @@ class SetCreate(BaseModel):
     distance_km: float | None = None
 
     @model_validator(mode="after")
-    def check_set_number_and_metrics(self):
+    def check_set_number(self):
         if self.set_number < 1:
             raise ValueError("set_number musi być większy od 0")
-        if self.weight_kg is None and self.duration_seconds is None:
-            raise ValueError("Podaj przynajmniej weight_kg lub duration_seconds")
         return self
 
 
