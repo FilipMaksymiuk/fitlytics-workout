@@ -3,6 +3,7 @@ import { getSessions, getSession } from '../api/sessions'
 
 interface SetItem {
   id: number
+  exercise_id: number
   set_number: number
   weight_kg: number
   reps: number
@@ -30,6 +31,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Record<number, SessionDetail | null>>({})
   const [loadingDetail, setLoadingDetail] = useState<Record<number, boolean>>({})
+  const [detailError, setDetailError] = useState<Record<number, string>>({})
 
   useEffect(() => {
     getSessions()
@@ -43,9 +45,12 @@ export default function HistoryPage() {
       return
     }
     setLoadingDetail(prev => ({ ...prev, [id]: true }))
+    setDetailError(prev => ({ ...prev, [id]: '' }))
     try {
       const res = await getSession(id)
       setExpanded(prev => ({ ...prev, [id]: res.data }))
+    } catch {
+      setDetailError(prev => ({ ...prev, [id]: 'Nie udało się załadować szczegółów' }))
     } finally {
       setLoadingDetail(prev => ({ ...prev, [id]: false }))
     }
@@ -106,6 +111,10 @@ export default function HistoryPage() {
             <button style={styles.detailBtn} onClick={() => handleToggle(session.id)}>
               {loadingDetail[session.id] ? 'Ładowanie...' : isExpanded ? 'Zwiń' : 'Szczegóły'}
             </button>
+
+            {detailError[session.id] && (
+              <p style={{ color: 'var(--accent)', fontSize: '0.9rem', marginTop: '0.5rem' }}>{detailError[session.id]}</p>
+            )}
 
             {isExpanded && detail && (
               <div style={styles.details}>

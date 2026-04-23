@@ -5,7 +5,7 @@ interface Plan {
   id: number
   name: string
   description?: string
-  planned_at: string
+  planned_date: string
   deadline: string
   is_completed: boolean
 }
@@ -125,6 +125,7 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>([])
   const [loading, setLoading] = useState(true)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [error, setError] = useState('')
 
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -145,21 +146,30 @@ export default function PlansPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !plannedAt || !deadline) return
-    createPlan({ name, description, planned_date: plannedAt, deadline }).then(() => {
-      setName('')
-      setDescription('')
-      setPlannedAt('')
-      setDeadline('')
-      fetchPlans(showCompleted)
-    })
+    setError('')
+    createPlan({ name, description, planned_date: plannedAt, deadline })
+      .then(() => {
+        setName('')
+        setDescription('')
+        setPlannedAt('')
+        setDeadline('')
+        fetchPlans(showCompleted)
+      })
+      .catch(() => setError('Nie udało się dodać planu'))
   }
 
   const handleComplete = (id: number) => {
-    updatePlan(id, { is_completed: true }).then(() => fetchPlans(showCompleted))
+    setError('')
+    updatePlan(id, { is_completed: true })
+      .then(() => fetchPlans(showCompleted))
+      .catch(() => setError('Nie udało się zaktualizować planu'))
   }
 
   const handleDelete = (id: number) => {
-    deletePlan(id).then(() => fetchPlans(showCompleted))
+    setError('')
+    deletePlan(id)
+      .then(() => fetchPlans(showCompleted))
+      .catch(() => setError('Nie udało się usunąć planu'))
   }
 
   const isOverdue = (plan: Plan) =>
@@ -212,6 +222,8 @@ export default function PlansPage() {
         </form>
       </div>
 
+      {error && <div style={{ color: 'var(--accent)', fontSize: '14px', marginBottom: '12px' }}>{error}</div>}
+
       <label style={s.checkboxRow}>
         <input
           type="checkbox"
@@ -234,7 +246,7 @@ export default function PlansPage() {
               {isOverdue(plan) && <span style={s.badge('var(--accent)')}>Spóźniony</span>}
             </div>
             {plan.description && <div style={s.meta}>{plan.description}</div>}
-            <div style={s.meta}>Trening: {new Date(plan.planned_at).toLocaleString('pl-PL')}</div>
+            <div style={s.meta}>Trening: {new Date(plan.planned_date).toLocaleString('pl-PL')}</div>
             <div style={s.meta}>Deadline: {new Date(plan.deadline).toLocaleString('pl-PL')}</div>
             <div style={s.actions}>
               {!plan.is_completed && (

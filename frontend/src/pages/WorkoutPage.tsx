@@ -90,7 +90,7 @@ export default function WorkoutPage() {
         workout_session_id: sessionId,
         exercise_id: selectedExercise,
         set_number: nextSetNumber(selectedExercise as number),
-        weight_kg: parseFloat(weight) || 0,
+        weight_kg: weight !== '' ? parseFloat(weight) : null,
         reps,
       })
       const res = await getSetsBySession(sessionId!)
@@ -101,8 +101,12 @@ export default function WorkoutPage() {
   }
 
   const handleDeleteSet = async (id: number) => {
-    await deleteSet(id)
-    setSets(prev => prev.filter(s => s.id !== id))
+    try {
+      await deleteSet(id)
+      setSets(prev => prev.filter(s => s.id !== id))
+    } catch {
+      setSetError('Nie udało się usunąć setu')
+    }
   }
 
   const handleEnd = async () => {

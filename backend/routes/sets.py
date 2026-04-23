@@ -70,6 +70,8 @@ def delete_set(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Set nie istnieje")
 
     session = db.query(WorkoutSession).filter(WorkoutSession.id == workout_set.workout_session_id).first()
+    if not session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesja nie istnieje")
     if session.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Brak dostępu")
 
