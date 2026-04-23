@@ -11,6 +11,11 @@ class SessionEnd(BaseModel):
     duration_minutes: int
 
 
+class SessionUpdate(BaseModel):
+    notes: str | None = None
+    duration_minutes: int | None = None
+
+
 class WorkoutSetOut(BaseModel):
     id: int
     exercise_id: int

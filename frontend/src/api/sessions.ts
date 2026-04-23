@@ -11,3 +11,9 @@ export const getSessions = () =>
 
 export const getSession = (id: number) =>
   client.get(`/sessions/${id}`)
+
+export const updateSession = (id: number, data: { notes?: string; duration_minutes?: number }) =>
+  client.patch(`/sessions/${id}`, data)
+
+export const deleteSession = (id: number) =>
+  client.delete(`/sessions/${id}`)

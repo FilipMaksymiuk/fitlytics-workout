@@ -20,6 +20,13 @@ class SetCreate(BaseModel):
         return self
 
 
+class SetUpdate(BaseModel):
+    weight_kg: float | None = None
+    reps: int | None = None
+    duration_seconds: int | None = None
+    distance_km: float | None = None
+
+
 class SetOut(BaseModel):
     id: int
     workout_session_id: int

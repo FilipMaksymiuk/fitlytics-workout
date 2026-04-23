@@ -8,3 +8,6 @@ export const getSetsBySession = (session_id: number) =>
 
 export const deleteSet = (set_id: number) =>
   client.delete(`/sets/${set_id}`)
+
+export const updateSet = (set_id: number, data: { weight_kg?: number | null; reps?: number | null }) =>
+  client.patch(`/sets/${set_id}`, data)

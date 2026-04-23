@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from models.models import WorkoutSession, WorkoutSet, User, Exercise
-from schemas.session import SessionCreate, SessionEnd, SessionOut, SessionDetailOut
+from schemas.session import SessionCreate, SessionEnd, SessionOut, SessionDetailOut, SessionUpdate
 from core.deps import get_current_user
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -56,6 +56,35 @@ def list_sessions(
         .limit(20)
         .all()
     )
+
+
+@router.patch("/{session_id}", response_model=SessionOut)
+def update_session(
+    session_id: int,
+    payload: SessionUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    session = fetch_session(db, session_id, current_user)
+    if payload.notes is not None:
+        session.notes = payload.notes
+    if payload.duration_minutes is not None:
+        session.duration_minutes = payload.duration_minutes
+    db.commit()
+    db.refresh(session)
+    return session
+
+
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_session(
+    session_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    session = fetch_session(db, session_id, current_user)
+    db.query(WorkoutSet).filter(WorkoutSet.workout_session_id == session_id).delete()
+    db.delete(session)
+    db.commit()
 
 
 @router.get("/{session_id}", response_model=SessionDetailOut)
