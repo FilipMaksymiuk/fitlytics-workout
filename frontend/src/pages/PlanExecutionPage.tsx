@@ -43,6 +43,7 @@ export default function PlanExecutionPage() {
   const [seconds, setSeconds] = useState(0)
   const [finishing, setFinishing] = useState(false)
   const [error, setError] = useState('')
+  const [invalidSets, setInvalidSets] = useState<Set<number>>(new Set())
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const initializedRef = useRef(false)
 
@@ -93,8 +94,24 @@ export default function PlanExecutionPage() {
 
   const handleFinish = async () => {
     if (!sessionId || !plan) return
-    setFinishing(true)
     setError('')
+
+    const invalid = new Set<number>()
+    for (const ex of plan.exercises) {
+      for (const ps of ex.sets) {
+        const st = setStates[ps.id]
+        if (st?.status === 'done' && (st.actual_weight === '' || st.actual_reps === '')) {
+          invalid.add(ps.id)
+        }
+      }
+    }
+    if (invalid.size > 0) {
+      setInvalidSets(invalid)
+      setError('Uzupełnij ciężar i powtórzenia we wszystkich wykonanych setach.')
+      return
+    }
+    setInvalidSets(new Set())
+    setFinishing(true)
     try {
       if (timerRef.current) clearInterval(timerRef.current)
 
@@ -181,22 +198,28 @@ export default function PlanExecutionPage() {
                       <div style={s.inputGroup}>
                         <label style={s.inputLabel}>Ciężar (kg)</label>
                         <input
-                          style={s.actualInput}
+                          style={{ ...s.actualInput, ...(invalidSets.has(ps.id) && st.actual_weight === '' ? s.inputError : {}) }}
                           type="number"
                           step={0.5}
                           min={0}
                           value={st.actual_weight}
-                          onChange={e => updateField(ps.id, 'actual_weight', e.target.value)}
+                          onChange={e => {
+                            updateField(ps.id, 'actual_weight', e.target.value)
+                            if (invalidSets.has(ps.id)) setInvalidSets(prev => { const n = new Set(prev); n.delete(ps.id); return n })
+                          }}
                         />
                       </div>
                       <div style={s.inputGroup}>
                         <label style={s.inputLabel}>Powtórzenia</label>
                         <input
-                          style={s.actualInput}
+                          style={{ ...s.actualInput, ...(invalidSets.has(ps.id) && st.actual_reps === '' ? s.inputError : {}) }}
                           type="number"
                           min={1}
                           value={st.actual_reps}
-                          onChange={e => updateField(ps.id, 'actual_reps', e.target.value)}
+                          onChange={e => {
+                            updateField(ps.id, 'actual_reps', e.target.value)
+                            if (invalidSets.has(ps.id)) setInvalidSets(prev => { const n = new Set(prev); n.delete(ps.id); return n })
+                          }}
                         />
                       </div>
                     </div>
@@ -247,6 +270,7 @@ const s: Record<string, React.CSSProperties> = {
   inputGroup: { display: 'flex', flexDirection: 'column' as const, gap: '4px' },
   inputLabel: { color: '#888', fontSize: '11px' },
   actualInput: { background: '#2a2a2a', border: '1px solid #2ecc71', borderRadius: '6px', color: '#fff', padding: '6px 8px', fontSize: '14px', width: '80px' },
+  inputError: { border: '1px solid #e74c3c' },
   skippedBlock: { display: 'flex', alignItems: 'center', gap: '12px' },
   skippedText: { color: '#888', fontSize: '13px', fontStyle: 'italic' },
   undoBtn: { background: 'transparent', border: '1px solid #555', color: '#aaa', borderRadius: '6px', padding: '4px 12px', fontSize: '12px', cursor: 'pointer' },
