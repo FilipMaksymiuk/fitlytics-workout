@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MuscleGroupOut(BaseModel):
@@ -10,10 +10,10 @@ class MuscleGroupOut(BaseModel):
 
 
 class ExerciseCreate(BaseModel):
-    name: str
-    category: str
-    equipment: str | None
-    description: str | None
+    name: str = Field(min_length=1, max_length=100)
+    category: str = Field(min_length=1, max_length=50)
+    equipment: str | None = Field(default=None, max_length=50)
+    description: str | None = Field(default=None, max_length=2000)
     muscle_groups: list[dict]
 
 

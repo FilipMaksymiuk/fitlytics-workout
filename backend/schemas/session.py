@@ -1,19 +1,19 @@
 from datetime import datetime
 from typing import Any
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class SessionCreate(BaseModel):
-    notes: str | None = None
+    notes: str | None = Field(default=None, max_length=1000)
 
 
 class SessionEnd(BaseModel):
-    duration_minutes: int
+    duration_minutes: int = Field(ge=0)
 
 
 class SessionUpdate(BaseModel):
-    notes: str | None = None
-    duration_minutes: int | None = None
+    notes: str | None = Field(default=None, max_length=1000)
+    duration_minutes: int | None = Field(default=None, ge=0)
 
 
 class WorkoutSetOut(BaseModel):

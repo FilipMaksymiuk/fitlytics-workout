@@ -1,28 +1,22 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SetCreate(BaseModel):
     workout_session_id: int
     exercise_id: int
-    set_number: int
-    weight_kg: float | None = None
-    reps: int | None = None
-    duration_seconds: int | None = None
-    distance_km: float | None = None
-
-    @model_validator(mode="after")
-    def check_set_number(self):
-        if self.set_number < 1:
-            raise ValueError("set_number musi być większy od 0")
-        return self
+    set_number: int = Field(ge=1)
+    weight_kg: float | None = Field(default=None, ge=0)
+    reps: int | None = Field(default=None, ge=1)
+    duration_seconds: int | None = Field(default=None, ge=0)
+    distance_km: float | None = Field(default=None, ge=0)
 
 
 class SetUpdate(BaseModel):
-    weight_kg: float | None = None
-    reps: int | None = None
-    duration_seconds: int | None = None
-    distance_km: float | None = None
+    weight_kg: float | None = Field(default=None, ge=0)
+    reps: int | None = Field(default=None, ge=1)
+    duration_seconds: int | None = Field(default=None, ge=0)
+    distance_km: float | None = Field(default=None, ge=0)
 
 
 class SetOut(BaseModel):

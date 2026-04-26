@@ -4,17 +4,9 @@ from database import get_db
 from models.models import WorkoutSession, WorkoutSet, User, Exercise
 from schemas.session import SessionCreate, SessionEnd, SessionOut, SessionDetailOut, SessionUpdate
 from core.deps import get_current_user
+from core.utils import fetch_session
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
-
-
-def fetch_session(db: Session, session_id: int, user: User) -> WorkoutSession:
-    session = db.query(WorkoutSession).filter(WorkoutSession.id == session_id).first()
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesja nie istnieje")
-    if session.user_id != user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Brak dostępu")
-    return session
 
 
 @router.post("", response_model=SessionOut, status_code=status.HTTP_201_CREATED)

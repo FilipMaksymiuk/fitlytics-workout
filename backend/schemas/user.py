@@ -1,23 +1,23 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserCreate(BaseModel):
-    email: str
-    username: str
-    password: str
+    email: str = Field(max_length=100)
+    username: str = Field(min_length=3, max_length=50)
+    password: str = Field(min_length=8, max_length=100)
 
 
 class UserLogin(BaseModel):
-    email: str
-    password: str
+    email: str = Field(max_length=100)
+    password: str = Field(max_length=100)
 
 
 class UserUpdate(BaseModel):
-    email: str | None = None
-    username: str | None = None
-    current_password: str | None = None
-    new_password: str | None = None
+    email: str | None = Field(default=None, max_length=100)
+    username: str | None = Field(default=None, min_length=3, max_length=50)
+    current_password: str | None = Field(default=None, max_length=100)
+    new_password: str | None = Field(default=None, min_length=8, max_length=100)
 
 
 class UserOut(BaseModel):

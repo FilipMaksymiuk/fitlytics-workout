@@ -4,8 +4,17 @@ from database import get_db
 from models.models import WorkoutSet, WorkoutSession, Exercise, User
 from schemas.set import SetCreate, SetOut, SetUpdate
 from core.deps import get_current_user
+from core.utils import fetch_session
 
 router = APIRouter(prefix="/sets", tags=["sets"])
+
+
+def fetch_set(db: Session, set_id: int, current_user: User) -> WorkoutSet:
+    workout_set = db.query(WorkoutSet).filter(WorkoutSet.id == set_id).first()
+    if not workout_set:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Set nie istnieje")
+    fetch_session(db, workout_set.workout_session_id, current_user)
+    return workout_set
 
 
 @router.post("", response_model=SetOut, status_code=status.HTTP_201_CREATED)
@@ -14,11 +23,7 @@ def log_set(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    session = db.query(WorkoutSession).filter(WorkoutSession.id == payload.workout_session_id).first()
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesja nie istnieje")
-    if session.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Brak dostępu")
+    fetch_session(db, payload.workout_session_id, current_user)
 
     exercise = db.query(Exercise).filter(Exercise.id == payload.exercise_id).first()
     if not exercise:
@@ -45,12 +50,7 @@ def get_sets_for_session(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    session = db.query(WorkoutSession).filter(WorkoutSession.id == session_id).first()
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesja nie istnieje")
-    if session.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Brak dostępu")
-
+    fetch_session(db, session_id, current_user)
     return (
         db.query(WorkoutSet)
         .filter(WorkoutSet.workout_session_id == session_id)
@@ -66,15 +66,7 @@ def update_set(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    workout_set = db.query(WorkoutSet).filter(WorkoutSet.id == set_id).first()
-    if not workout_set:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Set nie istnieje")
-
-    session = db.query(WorkoutSession).filter(WorkoutSession.id == workout_set.workout_session_id).first()
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesja nie istnieje")
-    if session.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Brak dostępu")
+    workout_set = fetch_set(db, set_id, current_user)
 
     if payload.weight_kg is not None:
         workout_set.weight_kg = payload.weight_kg
@@ -96,16 +88,7 @@ def delete_set(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    workout_set = db.query(WorkoutSet).filter(WorkoutSet.id == set_id).first()
-    if not workout_set:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Set nie istnieje")
-
-    session = db.query(WorkoutSession).filter(WorkoutSession.id == workout_set.workout_session_id).first()
-    if not session:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sesja nie istnieje")
-    if session.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Brak dostępu")
-
+    workout_set = fetch_set(db, set_id, current_user)
     db.delete(workout_set)
     db.commit()
     return {"message": "Usunięto"}

@@ -1,4 +1,5 @@
 import logging
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text, inspect as sa_inspect
@@ -29,9 +30,12 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Fitlytics Workout API")
 
+_cors_raw = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174")
+_cors_origins = [o.strip() for o in _cors_raw.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

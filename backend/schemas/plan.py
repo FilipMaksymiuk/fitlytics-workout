@@ -1,28 +1,28 @@
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class PlanSetCreate(BaseModel):
-    set_number: int
-    planned_weight_kg: float | None = None
-    planned_reps: int | None = None
+    set_number: int = Field(ge=1)
+    planned_weight_kg: float | None = Field(default=None, ge=0)
+    planned_reps: int | None = Field(default=None, ge=1)
 
 
 class PlanExerciseCreate(BaseModel):
     exercise_id: int
-    order_index: int
+    order_index: int = Field(ge=0)
     sets: list[PlanSetCreate] = []
 
 
 class PlanCreate(BaseModel):
-    name: str
-    description: str | None = None
+    name: str = Field(min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=500)
     exercises: list[PlanExerciseCreate] = []
 
 
 class PlanUpdate(BaseModel):
-    name: str | None = None
-    description: str | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=500)
     exercises: list[PlanExerciseCreate] | None = None
 
 
