@@ -145,8 +145,8 @@ export default function HistoryPage() {
   }
 
   const handleDeleteSession = async (id: number) => {
-    if (!window.confirm('Na pewno usunąć ten trening? Wszystkie sety zostaną usunięte.')) return
     setActionError('')
+    if (!window.confirm('Na pewno usunąć ten trening? Wszystkie sety zostaną usunięte.')) return
     try {
       await deleteSession(id)
       setSessions(prev => prev.filter(s => s.id !== id))

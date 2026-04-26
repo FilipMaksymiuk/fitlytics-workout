@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text, inspect as sa_inspect
@@ -20,7 +21,7 @@ def _migrate():
                 if col in cols:
                     conn.execute(text(f"ALTER TABLE workout_plans DROP COLUMN {col}"))
     except Exception:
-        pass
+        logging.exception("Schema migration failed")
 
 
 _migrate()

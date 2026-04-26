@@ -69,10 +69,13 @@ export default function PlanExecutionPage() {
       }),
       createSession({}).then(r => setSessionId(r.data.id)),
     ])
+  }, [id])
 
+  useEffect(() => {
+    if (sessionId === null) return
     timerRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [id])
+  }, [sessionId])
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60).toString().padStart(2, '0')

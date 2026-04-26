@@ -42,6 +42,8 @@ interface ExerciseInput {
   sets: SetInput[]
 }
 
+const pluralSety = (n: number) => n === 1 ? 'set' : (n >= 2 && n <= 4) ? 'sety' : 'setów'
+
 export default function PlansPage() {
   const navigate = useNavigate()
   const [plans, setPlans] = useState<Plan[]>([])
@@ -228,7 +230,7 @@ export default function PlansPage() {
                 value={pickedSetCount}
                 onChange={e => setPickedSetCount(Number(e.target.value))}
               >
-                {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} set{n > 1 ? 'y' : ''}</option>)}
+                {[1, 2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n} {pluralSety(n)}</option>)}
               </select>
               <button type="button" style={s.btnGhost} onClick={addExerciseToPlan}>
                 + Dodaj ćwiczenie
@@ -275,7 +277,7 @@ export default function PlansPage() {
               <div key={pe.id} style={s.planExRow}>
                 <span style={s.planExName}>{pe.exercise_name}</span>
                 <span style={s.planExSets}>
-                  {pe.sets.length} {pe.sets.length === 1 ? 'set' : 'sety/ów'}
+                  {pe.sets.length} {pluralSety(pe.sets.length)}
                   {pe.sets[0]?.planned_weight_kg != null && ` · ${pe.sets[0].planned_weight_kg}kg`}
                   {pe.sets[0]?.planned_reps != null && ` × ${pe.sets[0].planned_reps}`}
                 </span>

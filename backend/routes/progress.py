@@ -2,7 +2,7 @@ from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from database import get_db
 from models.models import WorkoutSet, WorkoutSession, Exercise, ExerciseMuscle, MuscleGroup, User
 from schemas.progress import ProgressPoint, PersonalRecord, MuscleVolumeBreakdown, WeeklyVolume, MonthlyTrainingDays
@@ -16,47 +16,56 @@ def get_personal_records(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    rows = (
+    max_subq = (
         db.query(
-            Exercise.id,
-            Exercise.name,
+            WorkoutSet.exercise_id,
             func.max(WorkoutSet.weight_kg).label("max_weight"),
-            func.max(WorkoutSession.date).label("date_achieved"),
         )
-        .join(WorkoutSet, WorkoutSet.exercise_id == Exercise.id)
         .join(WorkoutSession, WorkoutSession.id == WorkoutSet.workout_session_id)
         .filter(
             WorkoutSession.user_id == current_user.id,
             WorkoutSet.weight_kg.isnot(None),
         )
-        .group_by(Exercise.id, Exercise.name)
-        .order_by(func.max(WorkoutSet.weight_kg).desc())
+        .group_by(WorkoutSet.exercise_id)
+        .subquery()
+    )
+
+    rows = (
+        db.query(
+            Exercise.id,
+            Exercise.name,
+            max_subq.c.max_weight,
+            func.min(WorkoutSession.date).label("date_achieved"),
+        )
+        .join(max_subq, max_subq.c.exercise_id == Exercise.id)
+        .join(
+            WorkoutSet,
+            and_(
+                WorkoutSet.exercise_id == Exercise.id,
+                WorkoutSet.weight_kg == max_subq.c.max_weight,
+            ),
+        )
+        .join(
+            WorkoutSession,
+            and_(
+                WorkoutSession.id == WorkoutSet.workout_session_id,
+                WorkoutSession.user_id == current_user.id,
+            ),
+        )
+        .group_by(Exercise.id, Exercise.name, max_subq.c.max_weight)
+        .order_by(max_subq.c.max_weight.desc())
         .all()
     )
 
-    result = []
-    for row in rows:
-        max_w = row.max_weight
-        date_row = (
-            db.query(WorkoutSession.date)
-            .join(WorkoutSet, WorkoutSet.workout_session_id == WorkoutSession.id)
-            .filter(
-                WorkoutSession.user_id == current_user.id,
-                WorkoutSet.exercise_id == row.id,
-                WorkoutSet.weight_kg == max_w,
-            )
-            .order_by(WorkoutSession.date.asc())
-            .first()
+    return [
+        PersonalRecord(
+            exercise_id=row.id,
+            exercise_name=row.name,
+            max_weight=row.max_weight,
+            date_achieved=row.date_achieved,
         )
-        result.append(
-            PersonalRecord(
-                exercise_id=row.id,
-                exercise_name=row.name,
-                max_weight=max_w,
-                date_achieved=date_row.date if date_row else row.date_achieved,
-            )
-        )
-    return result
+        for row in rows
+    ]
 
 
 @router.get("/weekly-volume", response_model=list[WeeklyVolume])

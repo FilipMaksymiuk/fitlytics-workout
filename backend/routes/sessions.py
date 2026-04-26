@@ -82,7 +82,6 @@ def delete_session(
     current_user: User = Depends(get_current_user),
 ):
     session = fetch_session(db, session_id, current_user)
-    db.query(WorkoutSet).filter(WorkoutSet.workout_session_id == session_id).delete()
     db.delete(session)
     db.commit()
 

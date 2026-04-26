@@ -43,8 +43,11 @@ export default function WorkoutPage() {
   const getExerciseName = (id: number) =>
     exercises.find(e => e.id === id)?.name ?? `#${id}`
 
-  const nextSetNumber = (exerciseId: number) =>
-    sets.filter(s => s.exercise_id === exerciseId).length + 1
+  const nextSetNumber = (exerciseId: number) => {
+    const exerciseSets = sets.filter(s => s.exercise_id === exerciseId)
+    if (exerciseSets.length === 0) return 1
+    return Math.max(...exerciseSets.map(s => s.set_number)) + 1
+  }
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
