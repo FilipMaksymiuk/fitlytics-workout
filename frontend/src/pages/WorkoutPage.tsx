@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { createSession, endSession } from '../api/sessions'
-import { getExercises } from '../api/exercises'
+import { getExercises, deleteExercise } from '../api/exercises'
 import { createSet, getSetsBySession, deleteSet } from '../api/sets'
+import AddCustomExerciseForm from '../components/AddCustomExerciseForm'
 
 interface MuscleGroup {
   id: number
@@ -12,6 +13,7 @@ interface Exercise {
   id: number
   name: string
   primary_muscles: MuscleGroup[]
+  is_custom: boolean
 }
 
 interface WorkoutSet {
@@ -39,9 +41,12 @@ export default function WorkoutPage() {
   const [reps, setReps] = useState<number>(1)
   const [setError, setSetError] = useState('')
   const [summary, setSummary] = useState<Summary | null>(null)
+  const [showAddForm, setShowAddForm] = useState(false)
 
   const getExerciseName = (id: number) =>
     exercises.find(e => e.id === id)?.name ?? `#${id}`
+
+  const selectedExerciseData = exercises.find(e => e.id === selectedExercise)
 
   const nextSetNumber = (exerciseId: number) => {
     const exerciseSets = sets.filter(s => s.exercise_id === exerciseId)
@@ -112,6 +117,27 @@ export default function WorkoutPage() {
     }
   }
 
+  const handleDeleteExercise = async (id: number) => {
+    if (!window.confirm('Usunąć to własne ćwiczenie?')) return
+    try {
+      await deleteExercise(id)
+      const updated = exercises.filter(e => e.id !== id)
+      setExercises(updated)
+      if (selectedExercise === id) {
+        setSelectedExercise(updated.length > 0 ? updated[0].id : '')
+      }
+    } catch {
+      setSetError('Nie udało się usunąć ćwiczenia')
+    }
+  }
+
+  const handleExerciseAdded = async (ex: { id: number; name: string; is_custom: boolean }) => {
+    setShowAddForm(false)
+    const res = await getExercises(muscleFilter || undefined)
+    setExercises(res.data)
+    setSelectedExercise(ex.id)
+  }
+
   const handleEnd = async () => {
     if (timerRef.current) clearInterval(timerRef.current)
     await endSession(sessionId!, { duration_minutes: Math.round(seconds / 60) })
@@ -171,9 +197,42 @@ export default function WorkoutPage() {
               <option value="">Wszystkie partie</option>
               {muscleGroups.map(g => <option key={g} value={g}>{g}</option>)}
             </select>
-            <select style={styles.input} value={selectedExercise} onChange={e => setSelectedExercise(Number(e.target.value))}>
-              {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
-            </select>
+
+            <div style={styles.exerciseRow}>
+              <select
+                style={{ ...styles.input, flex: 1 }}
+                value={selectedExercise}
+                onChange={e => setSelectedExercise(Number(e.target.value))}
+              >
+                {exercises.map(ex => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.name}{ex.is_custom ? ' ★' : ''}
+                  </option>
+                ))}
+              </select>
+              {selectedExerciseData?.is_custom && (
+                <button
+                  style={styles.deleteExBtn}
+                  onClick={() => handleDeleteExercise(selectedExercise as number)}
+                  title="Usuń to własne ćwiczenie"
+                >
+                  🗑
+                </button>
+              )}
+            </div>
+
+            {!showAddForm && (
+              <button style={styles.addCustomBtn} onClick={() => setShowAddForm(true)}>
+                + Dodaj własne ćwiczenie
+              </button>
+            )}
+            {showAddForm && (
+              <AddCustomExerciseForm
+                onAdded={handleExerciseAdded}
+                onCancel={() => setShowAddForm(false)}
+              />
+            )}
+
             <div style={styles.row}>
               <label style={styles.label}>Ciężar (kg)</label>
               <input style={styles.input} type="number" step={0.5} min={0} value={weight} placeholder="0" onChange={e => setWeight(e.target.value)} />
@@ -241,6 +300,11 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     gap: '0.75rem',
   },
+  exerciseRow: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+  },
   input: {
     backgroundColor: '#333',
     border: '1px solid #444',
@@ -249,7 +313,28 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#fff',
     fontSize: '1rem',
     width: '100%',
-    boxSizing: 'border-box',
+    boxSizing: 'border-box' as const,
+  },
+  addCustomBtn: {
+    background: 'none',
+    border: '1px dashed #555',
+    borderRadius: '6px',
+    color: '#888',
+    padding: '0.5rem',
+    fontSize: '0.85rem',
+    cursor: 'pointer',
+    width: '100%',
+    textAlign: 'center' as const,
+  },
+  deleteExBtn: {
+    background: 'none',
+    border: '1px solid #555',
+    borderRadius: '6px',
+    color: '#e74c3c',
+    cursor: 'pointer',
+    padding: '0.4rem 0.6rem',
+    fontSize: '1rem',
+    flexShrink: 0,
   },
   row: {
     display: 'flex',

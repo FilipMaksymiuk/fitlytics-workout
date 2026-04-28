@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 from database import get_db
 from models.models import Exercise, ExerciseMuscle, MuscleGroup, User
@@ -29,6 +30,7 @@ def build_exercise_out(exercise: Exercise) -> ExerciseOut:
         description=exercise.description,
         primary_muscles=primary,
         secondary_muscles=secondary,
+        is_custom=exercise.user_id is not None,
     )
 
 
@@ -48,10 +50,12 @@ def get_exercise_with_muscles(db: Session, exercise_id: int) -> Exercise:
 def list_exercises(
     muscle_group: str | None = None,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     query = db.query(Exercise).options(
         joinedload(Exercise.exercise_muscles).joinedload(ExerciseMuscle.muscle_group)
+    ).filter(
+        or_(Exercise.user_id == None, Exercise.user_id == current_user.id)  # noqa: E711
     )
     if muscle_group:
         query = (
@@ -77,16 +81,21 @@ def get_exercise(
 def create_exercise(
     payload: ExerciseCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    if db.query(Exercise).filter(Exercise.name == payload.name).first():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ćwiczenie o tej nazwie już istnieje")
+    duplicate = db.query(Exercise).filter(
+        Exercise.name == payload.name,
+        Exercise.user_id == current_user.id,
+    ).first()
+    if duplicate:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Masz już ćwiczenie o tej nazwie")
 
     exercise = Exercise(
         name=payload.name,
         category=payload.category,
         equipment=payload.equipment,
         description=payload.description,
+        user_id=current_user.id,
     )
     db.add(exercise)
     db.flush()
@@ -106,11 +115,13 @@ def create_exercise(
 def delete_exercise(
     exercise_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     exercise = db.query(Exercise).filter(Exercise.id == exercise_id).first()
     if not exercise:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ćwiczenie nie istnieje")
+    if exercise.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Możesz usuwać tylko własne ćwiczenia")
     db.delete(exercise)
     db.commit()
     return {"message": "Usunięto"}

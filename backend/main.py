@@ -16,11 +16,24 @@ from routes.users import router as users_router
 
 def _migrate():
     try:
-        cols = {c["name"] for c in sa_inspect(engine).get_columns("workout_plans")}
+        plan_cols = {c["name"] for c in sa_inspect(engine).get_columns("workout_plans")}
         with engine.begin() as conn:
             for col in ("planned_date", "deadline", "is_completed"):
-                if col in cols:
+                if col in plan_cols:
                     conn.execute(text(f"ALTER TABLE workout_plans DROP COLUMN {col}"))
+
+        ex_cols = {c["name"] for c in sa_inspect(engine).get_columns("exercises")}
+        with engine.begin() as conn:
+            if "user_id" not in ex_cols:
+                conn.execute(text("ALTER TABLE exercises ADD COLUMN user_id INT NULL"))
+                conn.execute(text("ALTER TABLE exercises ADD CONSTRAINT fk_exercises_user FOREIGN KEY (user_id) REFERENCES users(id)"))
+
+        indexes = sa_inspect(engine).get_indexes("exercises")
+        for idx in indexes:
+            if "name" in idx["column_names"] and idx.get("unique", False):
+                with engine.begin() as conn:
+                    conn.execute(text(f"ALTER TABLE exercises DROP INDEX `{idx['name']}`"))
+                break
     except Exception:
         logging.exception("Schema migration failed")
 

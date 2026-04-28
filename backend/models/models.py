@@ -17,6 +17,7 @@ class User(Base):
 
     workout_sessions: Mapped[list["WorkoutSession"]] = relationship(back_populates="user")
     workout_plans: Mapped[list["WorkoutPlan"]] = relationship(back_populates="user")
+    exercises: Mapped[list["Exercise"]] = relationship(back_populates="user")
 
 
 class MuscleGroup(Base):
@@ -32,11 +33,13 @@ class Exercise(Base):
     __tablename__ = "exercises"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
     category: Mapped[str] = mapped_column(String(50), nullable=False)
     equipment: Mapped[str | None] = mapped_column(String(50), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
+    user: Mapped["User | None"] = relationship(back_populates="exercises")
     exercise_muscles: Mapped[list["ExerciseMuscle"]] = relationship(back_populates="exercise")
     workout_sets: Mapped[list["WorkoutSet"]] = relationship(back_populates="exercise")
     plan_exercises: Mapped[list["PlanExercise"]] = relationship(back_populates="exercise")

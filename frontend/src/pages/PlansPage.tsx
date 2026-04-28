@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getPlans, createPlan, updatePlan, deletePlan } from '../api/plans'
 import type { PlanExercisePayload } from '../api/plans'
 import { getExercises } from '../api/exercises'
+import AddCustomExerciseForm from '../components/AddCustomExerciseForm'
 
 interface PlanSet {
   id: number
@@ -30,6 +31,7 @@ interface Plan {
 interface Exercise {
   id: number
   name: string
+  is_custom: boolean
 }
 
 interface SetInput {
@@ -60,16 +62,26 @@ export default function PlansPage() {
   const [pickedExerciseId, setPickedExerciseId] = useState<number | ''>('')
   const [pickedSetCount, setPickedSetCount] = useState(3)
   const [saving, setSaving] = useState(false)
+  const [showAddCustom, setShowAddCustom] = useState(false)
 
   useEffect(() => {
     Promise.all([
       getPlans().then(r => setPlans(r.data)),
-      getExercises().then(r => setExercises(r.data)),
+      getExercises().then(r => {
+        setExercises(r.data)
+        setPickedExerciseId(r.data[0]?.id ?? '')
+      }),
     ]).finally(() => setLoading(false))
   }, [])
 
   const fetchPlans = () =>
     getPlans().then(r => setPlans(r.data))
+
+  const refreshExercises = async () => {
+    const res = await getExercises()
+    setExercises(res.data)
+    return res.data as Exercise[]
+  }
 
   const openCreate = () => {
     setEditingId(null)
@@ -79,6 +91,7 @@ export default function PlansPage() {
     setPickedExerciseId(exercises[0]?.id ?? '')
     setPickedSetCount(3)
     setError('')
+    setShowAddCustom(false)
     setShowForm(true)
   }
 
@@ -98,6 +111,7 @@ export default function PlansPage() {
     setPickedExerciseId(exercises[0]?.id ?? '')
     setPickedSetCount(3)
     setError('')
+    setShowAddCustom(false)
     setShowForm(true)
   }
 
@@ -163,6 +177,17 @@ export default function PlansPage() {
   const getExerciseName = (id: number) =>
     exercises.find(e => e.id === id)?.name ?? `#${id}`
 
+  const handleCustomExerciseAdded = async (ex: { id: number; name: string }) => {
+    const updated = await refreshExercises()
+    setPickedExerciseId(ex.id)
+    setShowAddCustom(false)
+    if (!planExercises.find(pe => pe.exercise_id === ex.id)) {
+      const sets: SetInput[] = Array.from({ length: pickedSetCount }, () => ({ weight: '', reps: '' }))
+      setPlanExercises(prev => [...prev, { exercise_id: ex.id, sets }])
+    }
+    return updated
+  }
+
   if (loading) return <div style={{ ...s.page, color: '#aaa', padding: '24px' }}>Ładowanie...</div>
 
   return (
@@ -187,7 +212,12 @@ export default function PlansPage() {
             {planExercises.map((ex, exIdx) => (
               <div key={exIdx} style={s.exerciseBlock}>
                 <div style={s.exerciseHeader}>
-                  <span style={s.exerciseName}>{getExerciseName(ex.exercise_id)}</span>
+                  <span style={s.exerciseName}>
+                    {getExerciseName(ex.exercise_id)}
+                    {exercises.find(e => e.id === ex.exercise_id)?.is_custom && (
+                      <span style={s.customBadge}>własne</span>
+                    )}
+                  </span>
                   <button type="button" style={s.removeBtn} onClick={() => removeExercise(exIdx)}>Usuń</button>
                 </div>
                 {ex.sets.map((set, setIdx) => (
@@ -223,7 +253,11 @@ export default function PlansPage() {
                 value={pickedExerciseId}
                 onChange={e => setPickedExerciseId(Number(e.target.value))}
               >
-                {exercises.map(ex => <option key={ex.id} value={ex.id}>{ex.name}</option>)}
+                {exercises.map(ex => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.name}{ex.is_custom ? ' ★' : ''}
+                  </option>
+                ))}
               </select>
               <select
                 style={{ ...s.select, width: '80px' }}
@@ -236,6 +270,22 @@ export default function PlansPage() {
                 + Dodaj ćwiczenie
               </button>
             </div>
+
+            {!showAddCustom && (
+              <button
+                type="button"
+                style={s.addCustomBtn}
+                onClick={() => setShowAddCustom(true)}
+              >
+                + Nie ma mojego ćwiczenia? Dodaj własne
+              </button>
+            )}
+            {showAddCustom && (
+              <AddCustomExerciseForm
+                onAdded={handleCustomExerciseAdded}
+                onCancel={() => setShowAddCustom(false)}
+              />
+            )}
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
               <button type="submit" style={s.btn} disabled={saving}>
@@ -305,12 +355,14 @@ const s: Record<string, React.CSSProperties> = {
   removeBtn: { background: 'transparent', border: '1px solid #c0392b', color: '#e74c3c', borderRadius: '6px', padding: '3px 10px', fontSize: '12px', cursor: 'pointer' },
   exerciseBlock: { background: '#1e1e1e', borderRadius: '8px', padding: '12px', marginBottom: '10px' },
   exerciseHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' },
-  exerciseName: { color: 'var(--accent)', fontWeight: 600, fontSize: '14px' },
+  exerciseName: { color: 'var(--accent)', fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' },
+  customBadge: { fontSize: '10px', color: '#888', background: '#2a2a2a', border: '1px solid #444', borderRadius: '4px', padding: '1px 5px', fontWeight: 400 },
   setRow: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' },
   setLabel: { color: '#aaa', fontSize: '13px', minWidth: '42px' },
   setInput: { background: '#2a2a2a', color: '#f0f0f0', border: '1px solid #444', borderRadius: '6px', padding: '5px 8px', fontSize: '13px', width: '72px' },
   setUnit: { color: '#666', fontSize: '12px' },
   addExRow: { display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px', flexWrap: 'wrap' as const },
+  addCustomBtn: { background: 'none', border: '1px dashed #444', borderRadius: '6px', color: '#777', padding: '8px', fontSize: '12px', cursor: 'pointer', width: '100%', textAlign: 'center' as const, marginTop: '8px' },
   planHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', flexWrap: 'wrap' as const, gap: '8px' },
   planName: { fontWeight: 700, fontSize: '16px' },
   meta: { fontSize: '13px', color: '#aaa', marginBottom: '8px' },

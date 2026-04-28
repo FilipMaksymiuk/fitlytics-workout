@@ -25,5 +25,6 @@ class ExerciseOut(BaseModel):
     description: str | None
     primary_muscles: list[MuscleGroupOut]
     secondary_muscles: list[MuscleGroupOut]
+    is_custom: bool = False
 
     model_config = ConfigDict(from_attributes=True)
