@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import exists
 from database import get_db
 from models.models import WorkoutSession, WorkoutSet, User, Exercise
 from schemas.session import SessionCreate, SessionEnd, SessionOut, SessionDetailOut, SessionUpdate
@@ -44,6 +45,7 @@ def list_sessions(
     return (
         db.query(WorkoutSession)
         .filter(WorkoutSession.user_id == current_user.id)
+        .filter(exists().where(WorkoutSet.workout_session_id == WorkoutSession.id))
         .order_by(WorkoutSession.date.desc())
         .limit(20)
         .all()
